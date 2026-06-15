@@ -1,6 +1,6 @@
 import blenderproc as bproc  # noqa: E402  MUST be the literal first line (BlenderProc enforces this)
 
-# SynthRange entrypoint - run under BlenderProc:
+# Simurg entrypoint - run under BlenderProc:
 #   blenderproc run generate.py --config configs/skywatch.yaml --n 200 --output out/run
 # BlenderProc injects the 'blenderproc' module and a Blender-bundled Python, so this
 # file MUST be launched via `blenderproc run`, not plain `python`.
@@ -16,16 +16,16 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from blenderproc.python.utility.LabelIdMapping import LabelIdMapping
 
-from synthrange import __version__
-from synthrange.config import load_config
-from synthrange import scene as scn
-from synthrange.card import write_card
+from simurg import __version__
+from simurg.config import load_config
+from simurg import scene as scn
+from simurg.card import write_card
 
 
 def parse_args() -> argparse.Namespace:
     # Strip BlenderProc's own argv separator if present.
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:]
-    p = argparse.ArgumentParser(description="Generate a SynthRange dataset.")
+    p = argparse.ArgumentParser(description="Generate a Simurg dataset.")
     p.add_argument("--config", required=True, help="path to a YAML scene recipe")
     p.add_argument("--n", type=int, default=None, help="number of frames (overrides config)")
     p.add_argument("--output", required=True, help="output directory")
@@ -115,7 +115,7 @@ def main() -> None:
             pass
 
         if (i + 1) % 25 == 0 or i == n - 1:
-            print(f"[synthrange] rendered {i + 1}/{n}", flush=True)
+            print(f"[simurg] rendered {i + 1}/{n}", flush=True)
 
     write_card(
         args.output,
@@ -127,10 +127,10 @@ def main() -> None:
         category_map=cfg.category_map(),
         per_class_instances=per_class,
         empty_frames=empty_frames,
-        synthrange_version=__version__,
+        simurg_version=__version__,
     )
-    print(f"[synthrange] done -> {args.output}", flush=True)
-    print(f"[synthrange] instances/class: {per_class}  empty-frames: {empty_frames}", flush=True)
+    print(f"[simurg] done -> {args.output}", flush=True)
+    print(f"[simurg] instances/class: {per_class}  empty-frames: {empty_frames}", flush=True)
 
 
 if __name__ == "__main__":

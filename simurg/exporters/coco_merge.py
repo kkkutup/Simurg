@@ -1,6 +1,6 @@
 """Merge several COCO datasets (e.g. from parallel render shards) into one.
 
-    python synthrange/exporters/coco_merge.py --out out/merged/coco \
+    python simurg/exporters/coco_merge.py --out out/merged/coco \
         out/shard0/coco out/shard1/coco out/shard2/coco
 
 Each input is a directory containing coco_annotations.json + images/. Image and

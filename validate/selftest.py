@@ -15,9 +15,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from synthrange.config import load_config, Config  # noqa: E402
-from synthrange.exporters.coco_to_yolo import convert  # noqa: E402
-from synthrange.exporters.coco_merge import merge  # noqa: E402
+from simurg.config import load_config, Config  # noqa: E402
+from simurg.exporters.coco_to_yolo import convert  # noqa: E402
+from simurg.exporters.coco_merge import merge  # noqa: E402
 
 
 def _fixture_coco(d: Path, n_images: int = 1, sval: int = 2, shard_tag: str = "") -> Path:
@@ -111,7 +111,7 @@ def test_stats() -> None:
 
 def test_thermal() -> None:
     import numpy as np
-    from synthrange import thermal
+    from simurg import thermal
     grad = np.tile(np.linspace(0, 1, 64), (16, 1))
     img = thermal.apply_palette(grad, "ironbow")
     assert img.shape == (16, 64, 3) and img.dtype == np.uint8

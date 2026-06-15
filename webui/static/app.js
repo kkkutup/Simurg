@@ -1,4 +1,4 @@
-// SynthRange control panel — vanilla JS, talks to the Flask API.
+// Simurg control panel — vanilla JS, talks to the Flask API.
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const api = async (url, opts) => {

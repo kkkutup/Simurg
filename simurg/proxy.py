@@ -1,4 +1,4 @@
-"""Primitive proxy drone meshes, so SynthRange runs with zero external 3D assets.
+"""Primitive proxy drone meshes, so Simurg runs with zero external 3D assets.
 
 These are deliberately crude stand-ins (a body + rotors / wings) — enough to train
 and validate the *pipeline* end to end. Swap in real .glb/.fbx models via the config

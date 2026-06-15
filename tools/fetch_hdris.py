@@ -3,7 +3,7 @@
     python tools/fetch_hdris.py --n 8 --res 2k
 
 No API key needed (PolyHaven is a free public API, all assets CC0). When assets/hdris/
-is populated, SynthRange uses these real skies instead of the flat procedural colour,
+is populated, Simurg uses these real skies instead of the flat procedural colour,
 which sharply improves realism and sim-to-real transfer.
 
 Stdlib-only (urllib + json). Idempotent: skips files already downloaded.
@@ -17,7 +17,7 @@ import urllib.request
 from pathlib import Path
 
 API = "https://api.polyhaven.com"
-UA = {"User-Agent": "synthrange-hdri-fetch/1.0 (+https://polyhaven.com)"}
+UA = {"User-Agent": "simurg-hdri-fetch/1.0 (+https://polyhaven.com)"}
 
 # Curated fallback slugs (clear/overcast/sunset variety) used if the API listing fails.
 FALLBACK = [

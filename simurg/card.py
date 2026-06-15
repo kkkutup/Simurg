@@ -22,13 +22,13 @@ def write_card(
     category_map: dict[int, str],
     per_class_instances: dict[str, int],
     empty_frames: int,
-    synthrange_version: str,
+    simurg_version: str,
 ) -> Path:
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     card = {
-        "generator": "synthrange",
-        "version": synthrange_version,
+        "generator": "simurg",
+        "version": simurg_version,
         "created_utc": datetime.now(timezone.utc).isoformat(),
         "host": platform.platform(),
         "config_path": config_path,

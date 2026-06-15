@@ -136,7 +136,7 @@ def load_config(path: str | Path) -> Config:
 
     return Config(
         raw=data,
-        name=ds.get("name", "synthrange"),
+        name=ds.get("name", "simurg"),
         n=int(ds.get("n", 100)),
         seed=int(ds.get("seed", 0)),
         width=int(rn.get("width", 1280)),

@@ -1,4 +1,4 @@
-"""Train a YOLO detector on a SynthRange (YOLO-format) dataset.
+"""Train a YOLO detector on a Simurg (YOLO-format) dataset.
 
     python validate/train_yolo.py --data out/run/yolo/data.yaml --epochs 50 --model yolov8n.pt
 

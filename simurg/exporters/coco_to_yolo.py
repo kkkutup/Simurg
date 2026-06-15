@@ -1,6 +1,6 @@
 """Convert a BlenderProc COCO dataset into YOLO (Ultralytics) format.
 
-    python synthrange/exporters/coco_to_yolo.py \
+    python simurg/exporters/coco_to_yolo.py \
         --coco out/run/coco/coco_annotations.json \
         --out  out/run/yolo
 

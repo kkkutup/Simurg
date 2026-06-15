@@ -1,4 +1,4 @@
-"""Dataset QA — class balance + box-size distribution for a SynthRange COCO file.
+"""Dataset QA — class balance + box-size distribution for a Simurg COCO file.
 
     python validate/stats.py --coco out/run/coco/coco_annotations.json
 

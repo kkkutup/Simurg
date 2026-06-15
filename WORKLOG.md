@@ -55,10 +55,10 @@ exactly what changed, so you can review fast.
    + `images/val` dirs (before, train and val pointed at the same images → inflated mAP).
 3. **Dataset QA** (`validate/stats.py`) — class balance + box-size histogram (tiny/small/
    medium/large) + empty-frame fraction; warns if too few hard long-range targets.
-4. **Synthetic-IR tone-mapper** (`synthrange/thermal.py`) — pure-NumPy palettes
+4. **Synthetic-IR tone-mapper** (`simurg/thermal.py`) — pure-NumPy palettes
    (white_hot/black_hot/ironbow) + percentile auto-gain + IR noise/banding. This is the
    testable half of Phase 3; the Blender emission pass is still to wire into scene.py.
-5. **Shard merge** (`synthrange/exporters/coco_merge.py`) — combine COCO outputs from
+5. **Shard merge** (`simurg/exporters/coco_merge.py`) — combine COCO outputs from
    parallel render processes into one dataset (unique-id remap, category unify by name).
    Lets you scale rendering horizontally.
 6. **Offline test suite** expanded to cover all of the above + syntax-compiled every file.
@@ -74,12 +74,12 @@ exactly what changed, so you can review fast.
 - Phase 2 weather + in-render sensor noise (haze, motion blur, compositor noise).
 - Phase 4 sequence/track mode + MOT exporter.
 - I did **not** commit — `git` is initialized but nothing is committed (per your call).
-  When you're ready: `git add -A && git commit -m "SynthRange Phase 0-1 + tooling"`.
+  When you're ready: `git add -A && git commit -m "Simurg Phase 0-1 + tooling"`.
 
 ## First thing to do when you wake
 Run the Phase-0 spike (installs Blender on first run) and eyeball the label overlay:
 ```powershell
-cd "C:\Users\Kutup TAN\Documents\synthrange"
+cd "Simurg"
 python -m venv venv
 .\venv\Scripts\python.exe -m pip install -r requirements.txt
 .\venv\Scripts\blenderproc.exe run generate.py --config configs/skywatch.yaml --n 20 --output out/spike

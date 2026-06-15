@@ -1,19 +1,19 @@
-# SynthRange
+# Simurg
 
 *A procedural synthetic-data generator for drone / counter-UAS perception.*
 
-SynthRange renders large, **perfectly-labelled** datasets of drones across randomized
+Simurg renders large, **perfectly-labelled** datasets of drones across randomized
 conditions (pose, range, lighting, weather, background — EO now, simulated IR later),
 auto-generating COCO + YOLO annotations. It is the data engine that feeds a drone
 detector / make-model classifier.
 
 > **The product is one number, not pretty renders:** a detector trained on
-> SynthRange-only data that performs on *real* drone images. See `validate/`.
+> Simurg-only data that performs on *real* drone images. See `validate/`.
 
 This repo currently implements **Phase 0–1**: a runnable static-image generator with
 proxy drone meshes (no external 3D assets needed to start), COCO output via BlenderProc,
 and a COCO→YOLO exporter. Later phases (domain-randomization breadth, synthetic-IR,
-video/track MOT export) are scaffolded in `synthrange/` and `configs/`.
+video/track MOT export) are scaffolded in `simurg/` and `configs/`.
 
 ---
 
@@ -81,7 +81,7 @@ Overlay the labels to confirm they are pixel-perfect:
 
 ```powershell
 .\venv\Scripts\blenderproc.exe run generate.py --config configs/skywatch.yaml --n 2000 --output out/skywatch_v0
-.\venv\Scripts\python.exe synthrange\exporters\coco_to_yolo.py --coco out/skywatch_v0/coco/coco_annotations.json --out out/skywatch_v0/yolo
+.\venv\Scripts\python.exe simurg\exporters\coco_to_yolo.py --coco out/skywatch_v0/coco/coco_annotations.json --out out/skywatch_v0/yolo
 ```
 
 ## Dataset tools
@@ -91,11 +91,11 @@ Overlay the labels to confirm they are pixel-perfect:
 .\venv\Scripts\python.exe validate\stats.py --coco out/skywatch_v0/coco/coco_annotations.json
 
 # YOLO export WITH a real train/val split (don't validate on training frames)
-.\venv\Scripts\python.exe synthrange\exporters\coco_to_yolo.py `
+.\venv\Scripts\python.exe simurg\exporters\coco_to_yolo.py `
     --coco out/skywatch_v0/coco/coco_annotations.json --out out/skywatch_v0/yolo --val-split 0.1
 
 # Render in parallel shards, then merge them into one dataset (scales across processes)
-.\venv\Scripts\python.exe synthrange\exporters\coco_merge.py --out out/merged/coco `
+.\venv\Scripts\python.exe simurg\exporters\coco_merge.py --out out/merged/coco `
     out/shard0/coco out/shard1/coco out/shard2/coco
 ```
 
@@ -131,7 +131,7 @@ Record the **mAP@0.5 on real** — that number, however low at first, is the bas
   `configs/skywatch.yaml` under `assets.models`. Track each license in
   `assets/drones/manifest.yaml`.
 
-Without any assets, SynthRange uses built-in **primitive proxy drones** so you can run today.
+Without any assets, Simurg uses built-in **primitive proxy drones** so you can run today.
 
 ---
 
@@ -140,7 +140,7 @@ Without any assets, SynthRange uses built-in **primitive proxy drones** so you c
 ```
 generate.py                  # BlenderProc entrypoint (run via `blenderproc run`)
 configs/skywatch.yaml        # scene recipe (classes, ranges, render settings)
-synthrange/
+simurg/
   config.py                  # YAML -> typed config
   scene.py                   # BlenderProc scene build + domain randomization
   proxy.py                   # primitive proxy drone meshes (no assets needed)
@@ -164,16 +164,16 @@ assets/  samples/  out/
 - [ ] Phase 5 — sim-to-real validation + randomization ablations
 - [ ] Phase 6 — packaging + public sample release + benchmark page
 
-See `../synthrange-build-plan.md` for the full plan.
+See `../simurg-build-plan.md` for the full plan.
 
 ## Tools quick-reference
 
 | File | What it does | Runs without Blender |
 |------|--------------|:--:|
 | `generate.py` | Render N frames → COCO (+ dataset card) | no |
-| `synthrange/exporters/coco_to_yolo.py` | COCO → YOLO, optional `--val-split` | yes |
-| `synthrange/exporters/coco_merge.py` | Merge parallel render shards | yes |
-| `synthrange/thermal.py` | Synthetic-IR tone-mapping (palettes + IR noise) | yes |
+| `simurg/exporters/coco_to_yolo.py` | COCO → YOLO, optional `--val-split` | yes |
+| `simurg/exporters/coco_merge.py` | Merge parallel render shards | yes |
+| `simurg/thermal.py` | Synthetic-IR tone-mapping (palettes + IR noise) | yes |
 | `tools/fetch_hdris.py` | Download CC0 sky HDRIs from PolyHaven | yes |
 | `webui/app.py` | Admin panel web UI (configs/HDRIs/models/render/datasets) | yes |
 | `validate/stats.py` | Class balance + box-size QA | yes |

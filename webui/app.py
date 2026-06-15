@@ -1,4 +1,4 @@
-"""SynthRange admin panel — a local Flask web UI to manage configs, HDRIs, drone
+"""Simurg admin panel — a local Flask web UI to manage configs, HDRIs, drone
 models, launch renders with live progress, and browse datasets with label overlays.
 
 Run it:
@@ -199,7 +199,7 @@ def api_export(name):
     coco = f"out/{name}/coco/coco_annotations.json"
     val = request.get_json(silent=True) or {}
     split = float(val.get("val_split", 0.1))
-    cmd = [str(PYEXE), "synthrange/exporters/coco_to_yolo.py",
+    cmd = [str(PYEXE), "simurg/exporters/coco_to_yolo.py",
            "--coco", coco, "--out", f"out/{name}/yolo", "--val-split", str(split)]
     jid = jm.start(cmd, str(ROOT), kind="export", output=name)
     return jsonify({"job": jid})
@@ -286,5 +286,5 @@ def api_dataset_image(name, file):
 
 
 if __name__ == "__main__":
-    print("SynthRange admin panel -> http://127.0.0.1:5000")
+    print("Simurg admin panel -> http://127.0.0.1:5000")
     app.run(host="127.0.0.1", port=5000, debug=False, threaded=True)
