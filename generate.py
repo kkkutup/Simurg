@@ -64,6 +64,15 @@ def main() -> None:
     anchor.set_cp("category_id", 0)
     anchor.set_name("__anchor__")
 
+    # Load real 3D models once (from assets/drones/manifest.yaml). Classes with a model
+    # use it; classes without one fall back to the primitive proxy drones.
+    library = scn.load_model_library(os.path.join("assets", "drones"))
+    if library:
+        print(f"[simurg] model library: "
+              f"{ {k: len(v) for k, v in library.items()} }", flush=True)
+    else:
+        print("[simurg] no models found -> using proxy drones", flush=True)
+
     per_class = {c.name: 0 for c in cfg.classes}
     empty_frames = 0
     rendered = 0
@@ -71,7 +80,7 @@ def main() -> None:
     for i in range(n):
         bproc.utility.reset_keyframes()
 
-        targets = scn.build_targets(cfg, rng)
+        targets = scn.build_targets(cfg, rng, library)
         if not targets:
             empty_frames += 1
         else:

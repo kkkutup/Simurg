@@ -10,3 +10,6 @@ pycocotools>=2.0.7
 
 # Admin panel (webui/)
 flask>=3.0
+
+# 3D drone model fetcher (tools/fetch_objaverse_drones.py)
+objaverse>=0.1.7

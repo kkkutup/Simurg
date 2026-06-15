@@ -1,15 +1,41 @@
-# Track every 3D asset's source + license here. This matters when you SELL the data:
-# a buyer (ASELSAN-tier integrator, university lab) will ask whether the training set
-# is license-clean. Prefer CC0 / self-built models for anything redistributed.
-#
-# Until you add models, SynthRange uses built-in primitive proxy drones (see
-# synthrange/proxy.py) and this file can stay empty.
-#
-# Example entry:
-# - file: mavic_proxy.glb
-#   class: quad_consumer
-#   source: https://example.com/model
-#   license: CC0          # CC0 | CC-BY | purchased-royalty-free | self-built
-#   notes: verified geometry, scaled to ~0.35 m span
-
-models: []
+models:
+- file: quad_consumer/5f6f9115d1ae4d5c994fb348eb8e70aa.glb
+  class: quad_consumer
+  license: by
+  source: objaverse:5f6f9115d1ae4d5c994fb348eb8e70aa
+  name: UAV(unmanned Aerial Vehicle)
+- file: quad_fpv/e3f150488ab843bebaa367f821fcb409.glb
+  class: quad_fpv
+  license: by
+  source: objaverse:e3f150488ab843bebaa367f821fcb409
+  name: DJI Drone Dji Drone
+- file: quad_consumer/301fdddb9cd9420faa1174e68e0b56ab.glb
+  class: quad_consumer
+  license: by
+  source: objaverse:301fdddb9cd9420faa1174e68e0b56ab
+  name: Drone
+- file: quad_fpv/af00776b667842968a2b63992fb584df.glb
+  class: quad_fpv
+  license: by
+  source: objaverse:af00776b667842968a2b63992fb584df
+  name: 450 class quadcopter 3d printed (WIP)
+- file: helicopter/f92215936dcf4618a9d5d5ce86b7e2f4.glb
+  class: helicopter
+  license: by
+  source: objaverse:f92215936dcf4618a9d5d5ce86b7e2f4
+  name: Helicopter Low-Poly
+- file: helicopter/d20a3de366a444468ce0e7abd7117e3e.glb
+  class: helicopter
+  license: by
+  source: objaverse:d20a3de366a444468ce0e7abd7117e3e
+  name: H225 Stormworks creation
+- file: fixedwing_fpv/3ca2f507a0a749799e16a4eee12e456c.glb
+  class: fixedwing_fpv
+  license: by
+  source: objaverse:3ca2f507a0a749799e16a4eee12e456c
+  name: B52
+- file: fixedwing_fpv/2ae974bf45a3436c9d2a6d5e4bdca385.glb
+  class: fixedwing_fpv
+  license: by
+  source: objaverse:2ae974bf45a3436c9d2a6d5e4bdca385
+  name: Fockewulf

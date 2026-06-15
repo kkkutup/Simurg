@@ -106,18 +106,126 @@ def set_lighting(cfg: Config, rng: np.random.Generator):
     return light
 
 
-def build_targets(cfg: Config, rng: np.random.Generator) -> list:
-    """Create 0..k drones near the origin. Returns list of MeshObjects (may be empty)."""
+def _flatten_and_normalize(objs):
+    """Flatten a loaded model (glb scene graph) into one mesh, centred at the origin
+    and scaled so its largest dimension == 1 m. Returns a hidden MeshObject template,
+    or None if the file held no meshes.
+    """
+    import bpy
+
+    meshes = [o for o in objs if getattr(o, "blender_obj", None) and o.blender_obj.type == "MESH"]
+    others = [o for o in objs if o not in meshes]
+    if not meshes:
+        for o in others:
+            try:
+                o.delete()
+            except Exception:
+                pass
+        return None
+
+    # Bake the full parent-chain world transform onto each mesh (glb puts the up-axis
+    # correction on the root empty), then join into one object.
+    bpy.ops.object.select_all(action="DESELECT")
+    for m in meshes:
+        m.blender_obj.select_set(True)
+    bpy.context.view_layer.objects.active = meshes[0].blender_obj
+    try:
+        bpy.ops.object.parent_clear(type="CLEAR_KEEP_TRANSFORM")
+    except Exception:
+        pass
+    if len(meshes) > 1:
+        bpy.ops.object.join()
+    joined_b = bpy.context.view_layer.objects.active
+    try:
+        bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+    except Exception:
+        pass
+    for o in others:  # drop leftover empties / armatures
+        try:
+            o.delete()
+        except Exception:
+            pass
+
+    obj = bproc.types.MeshObject(joined_b)
+    # centre on geometry, then scale to unit size
+    bpy.ops.object.select_all(action="DESELECT")
+    joined_b.select_set(True)
+    bpy.context.view_layer.objects.active = joined_b
+    try:
+        bpy.ops.object.origin_set(type="ORIGIN_GEOMETRY", center="BOUNDS")
+    except Exception:
+        pass
+    obj.set_location([0.0, 0.0, 0.0])
+    bb = obj.get_bound_box()
+    dims = bb.max(axis=0) - bb.min(axis=0)
+    s = 1.0 / float(max(dims.max(), 1e-6))
+    obj.set_scale([s, s, s])
+    obj.persist_transformation_into_mesh()  # bake unit scale into the mesh data
+    return obj
+
+
+def load_model_library(drones_dir: str) -> dict:
+    """Load every manifest model once as a normalized, hidden template.
+    Returns {class_name: [MeshObject, ...]}. Empty dict => proxies are used.
+    """
+    import yaml
+
+    mpath = os.path.join(drones_dir, "manifest.yaml")
+    if not os.path.isfile(mpath):
+        return {}
+    man = yaml.safe_load(open(mpath, encoding="utf-8")) or {}
+    lib: dict[str, list] = {}
+    for m in man.get("models") or []:
+        cls, rel = m.get("class"), m.get("file")
+        if not cls or not rel:
+            continue
+        path = os.path.join(drones_dir, rel)
+        if not os.path.isfile(path):
+            continue
+        try:
+            objs = bproc.loader.load_obj(path)
+        except Exception as e:  # noqa: BLE001
+            print(f"[simurg] model load failed {rel}: {e}", flush=True)
+            continue
+        tmpl = _flatten_and_normalize(objs)
+        if tmpl is None:
+            continue
+        tmpl.hide(True)  # templates never render; per-frame instances do
+        lib.setdefault(cls, []).append(tmpl)
+        print(f"[simurg] model template: {cls} <- {rel}", flush=True)
+    return lib
+
+
+def build_targets(cfg: Config, rng: np.random.Generator, library: dict | None = None) -> list:
+    """Create 0..k drones near the origin. Uses real models from `library` when the
+    chosen class has any, else falls back to a primitive proxy. Returns MeshObjects.
+    """
+    library = library or {}
     k = int(rng.integers(cfg.n_targets[0], cfg.n_targets[1] + 1))
     objs = []
     for _ in range(k):
         cls = cfg.classes[int(rng.integers(0, len(cfg.classes)))]
         span = float(rng.uniform(*cfg.target_scale_m))
-        obj = proxy.make_proxy(cls.shape, cls.id, cls.name, span=span)
-        # scatter extra targets a little around the scene centre
+
+        templates = library.get(cls.name)
+        if templates:
+            tmpl = templates[int(rng.integers(0, len(templates)))]
+            obj = tmpl.duplicate()
+            obj.hide(False)
+            obj.set_scale([span, span, span])
+            obj.set_cp("category_id", cls.id)
+            obj.set_name(cls.name)
+        else:
+            obj = proxy.make_proxy(cls.shape, cls.id, cls.name, span=span)
+
         jit = cfg.target_jitter_m
         obj.set_location(list(rng.uniform(-jit, jit, size=3) * np.array([1, 1, 0.5])))
-        proxy.random_orientation(obj, rng)
+        # moderate attitude: full yaw, limited pitch/roll (drones aren't usually inverted)
+        obj.set_rotation_euler([
+            float(rng.uniform(-0.5, 0.5)),
+            float(rng.uniform(-0.5, 0.5)),
+            float(rng.uniform(-np.pi, np.pi)),
+        ])
         objs.append(obj)
     return objs
 

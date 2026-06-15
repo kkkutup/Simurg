@@ -127,11 +127,20 @@ Record the **mAP@0.5 on real** — that number, however low at first, is the bas
   They land in `assets/hdris/`; when that folder is non-empty the renderer uses a random
   real sky per frame instead of the flat-colour sky. (Delete any night/dawn skies you don't
   want if you're training a daytime-only detector.)
-- **Drone models** (`.obj`/`.glb`/`.fbx`) → `assets/drones/` and list them in
-  `configs/skywatch.yaml` under `assets.models`. Track each license in
-  `assets/drones/manifest.yaml`.
+- **Drone models** — fetch real 3D drones from **Objaverse** (no API key), filtered to
+  commercially-usable licenses and sorted into the per-class folders:
+  ```powershell
+  .\venv\Scripts\python.exe tools\fetch_objaverse_drones.py --per-class 3 --categories drone,helicopter,airplane
+  ```
+  Each model's source uid + license is recorded in `assets/drones/manifest.yaml`. You can
+  also drop your own `.glb`/`.obj`/`.fbx` into `assets/drones/<class>/` and add a manifest
+  entry (or use the admin panel's upload form). The renderer loads every manifest model
+  once, normalizes it to unit size, and instances it per frame; **classes with a model use
+  it, classes without one fall back to the proxy** — so you can mix.
 
-Without any assets, Simurg uses built-in **primitive proxy drones** so you can run today.
+Without any models, Simurg uses built-in **primitive proxy drones** so you can run today.
+Model binaries are git-ignored; the manifest (with source uids) is committed, so a fresh
+clone re-fetches the same models by re-running the fetcher.
 
 ---
 
@@ -175,6 +184,7 @@ See `../simurg-build-plan.md` for the full plan.
 | `simurg/exporters/coco_merge.py` | Merge parallel render shards | yes |
 | `simurg/thermal.py` | Synthetic-IR tone-mapping (palettes + IR noise) | yes |
 | `tools/fetch_hdris.py` | Download CC0 sky HDRIs from PolyHaven | yes |
+| `tools/fetch_objaverse_drones.py` | Download real 3D drone models from Objaverse | yes |
 | `webui/app.py` | Admin panel web UI (configs/HDRIs/models/render/datasets) | yes |
 | `validate/stats.py` | Class balance + box-size QA | yes |
 | `validate/check_coco.py` | Overlay labels on images to eyeball | yes |
