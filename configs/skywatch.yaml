@@ -1,0 +1,49 @@
+# SynthRange scene recipe — "skywatch" baseline (drones against sky)
+# Every value here is logged into dataset_card.json for reproducibility.
+
+dataset:
+  name: skywatch_v0
+  n: 200            # default frame count (override with --n)
+  seed: 0           # override with --seed
+
+render:
+  width: 1280
+  height: 720
+  samples: 48       # Cycles samples (lower = faster spike, raise for final batch)
+  denoiser: true
+
+camera:
+  fov_deg: [40, 75]   # horizontal field of view, randomized per frame
+
+# Classes the generator can place. id 0 is reserved for background by convention.
+classes:
+  - { name: quad_consumer, id: 1, shape: quad }
+  - { name: quad_fpv,      id: 2, shape: quad }
+  - { name: fixedwing_fpv, id: 3, shape: fixedwing }
+
+scene:
+  n_targets: [0, 2]        # drones per frame; 0 => hard-negative (empty) frame
+  distance_m: [8, 200]     # camera-to-target distance (controls apparent size)
+  target_scale_m: [0.2, 1.2]   # physical span of the target
+  target_jitter_m: 4.0     # spread of extra targets around the scene centre
+
+lighting:
+  sun_energy: [1.0, 6.0]
+  sun_elevation_deg: [5, 85]
+  sun_azimuth_deg: [0, 360]
+
+background:
+  # Flat procedural sky used when assets/hdris is empty.
+  sky_color_top:    [0.20, 0.45, 0.85]
+  sky_color_bottom: [0.75, 0.85, 0.97]
+  hdri_dir: assets/hdris   # if populated, a random HDRI is used instead
+
+assets:
+  # Optional real 3D models. If empty, primitive proxy drones are used.
+  # Each entry: { path: assets/drones/mavic.glb, class: quad_consumer }
+  models: []
+
+outputs:
+  coco: true
+  yolo: false   # run the standalone exporter, or set true to emit alongside
+  depth: false  # enable in later phases

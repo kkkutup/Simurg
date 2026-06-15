@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SynthRange · Control Panel</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand"><span class="logo">◆</span> SynthRange</div>
+    <nav>
+      <button class="nav active" data-tab="render">▦ Render</button>
+      <button class="nav" data-tab="config">⚙ Config</button>
+      <button class="nav" data-tab="hdris">☁ Skies (HDRI)</button>
+      <button class="nav" data-tab="models">✈ Drone Models</button>
+      <button class="nav" data-tab="datasets">▤ Datasets</button>
+    </nav>
+    <div class="job-mini" id="jobMini"></div>
+    <div class="foot">local · 127.0.0.1:5000</div>
+  </aside>
+
+  <main class="main">
+    <!-- RENDER -->
+    <section class="tab active" id="tab-render">
+      <h1>Render a dataset</h1>
+      <div class="grid2">
+        <div class="card">
+          <h3>Job</h3>
+          <label>Config <select id="r-config"></select></label>
+          <label>Frames (N) <input id="r-n" type="number" value="200" min="1"></label>
+          <label>Output name <input id="r-out" type="text" placeholder="skywatch_v0"></label>
+          <div class="row">
+            <label class="half">Samples override <input id="r-samples" type="number" placeholder="config"></label>
+            <label class="half">Seed <input id="r-seed" type="number" placeholder="config"></label>
+          </div>
+          <div class="btnrow">
+            <button class="primary" id="r-start">▶ Start render</button>
+            <button id="r-preview" title="Render 1 quick low-sample frame">⚡ Preview (1)</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Live progress</h3>
+          <div id="r-status" class="muted">No active job.</div>
+          <div class="progress"><div class="bar" id="r-bar"></div></div>
+          <pre class="log" id="r-log"></pre>
+          <button id="r-stop" class="danger" style="display:none">■ Stop</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONFIG -->
+    <section class="tab" id="tab-config">
+      <h1>Scene config <span class="hint">tune what gets rendered</span></h1>
+      <div class="card">
+        <div class="row">
+          <label>Edit config <select id="c-name"></select></label>
+          <button id="c-reload">↻ Reload</button>
+        </div>
+        <div class="grid3" id="c-fields"></div>
+        <h3>Classes</h3>
+        <table class="tbl" id="c-classes"></table>
+        <button id="c-addclass" class="small">+ class</button>
+        <div class="btnrow">
+          <label>Save as <input id="c-saveas" type="text" placeholder="name"></label>
+          <button class="primary" id="c-save">💾 Save</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- HDRIS -->
+    <section class="tab" id="tab-hdris">
+      <h1>Environment skies (HDRI) <span class="hint">used as random backgrounds</span></h1>
+      <div class="card">
+        <h3>Fetch from PolyHaven (CC0)</h3>
+        <div class="row">
+          <label class="half">How many <input id="h-n" type="number" value="6"></label>
+          <label class="half">Resolution
+            <select id="h-res"><option>1k</option><option selected>2k</option><option>4k</option></select>
+          </label>
+          <button class="primary" id="h-fetch">⬇ Download</button>
+        </div>
+        <div id="h-fetchlog" class="muted small"></div>
+      </div>
+      <div class="card">
+        <h3>Installed skies (<span id="h-count">0</span>)</h3>
+        <div class="chips" id="h-list"></div>
+      </div>
+    </section>
+
+    <!-- MODELS -->
+    <section class="tab" id="tab-models">
+      <h1>Drone models <span class="hint">3D meshes replace the proxy drones</span></h1>
+      <div class="card">
+        <h3>Upload model</h3>
+        <div class="row">
+          <input type="file" id="m-file" accept=".obj,.glb,.fbx,.ply,.blend">
+          <label class="half">Class <select id="m-class"></select></label>
+          <label class="half">License <input id="m-license" placeholder="CC0 / purchased / self-built"></label>
+          <button class="primary" id="m-upload">⬆ Upload</button>
+        </div>
+        <div class="muted small">Accepted: .obj .glb .fbx .ply .blend — tracked in manifest with license.</div>
+      </div>
+      <div class="card">
+        <h3>Installed models</h3>
+        <table class="tbl" id="m-list"></table>
+        <div class="muted small">No models yet → SynthRange uses built-in primitive proxy drones.</div>
+      </div>
+    </section>
+
+    <!-- DATASETS -->
+    <section class="tab" id="tab-datasets">
+      <h1>Datasets</h1>
+      <div class="card">
+        <table class="tbl" id="d-list"></table>
+      </div>
+      <div class="card" id="d-detail" style="display:none">
+        <div class="row">
+          <h3 id="d-title"></h3>
+          <span class="grow"></span>
+          <label class="inline"><input type="checkbox" id="d-boxes" checked> show boxes</label>
+          <button id="d-export" class="small">Export YOLO</button>
+        </div>
+        <div id="d-stats" class="statbar"></div>
+        <div class="gallery" id="d-gallery"></div>
+      </div>
+    </section>
+  </main>
+</div>
+<div id="toast" class="toast"></div>
+<script src="/static/app.js"></script>
+</body>
+</html>

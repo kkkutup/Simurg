@@ -1,0 +1,12 @@
+# Core generator
+blenderproc>=2.7.0
+numpy>=1.24
+pyyaml>=6.0
+
+# Validation loop (only needed for validate/ scripts)
+ultralytics>=8.1.0
+opencv-python>=4.8
+pycocotools>=2.0.7
+
+# Admin panel (webui/)
+flask>=3.0

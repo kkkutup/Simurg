@@ -1,0 +1,28 @@
+# Generated datasets / renders
+out/
+runs/
+*.png
+*.jpg
+*.jpeg
+*.exr
+*.hdr
+
+# Large 3D assets (keep manifest, not binaries)
+assets/drones/*.obj
+assets/drones/*.glb
+assets/drones/*.fbx
+assets/drones/*.blend
+assets/hdris/*
+
+# Real validation imagery (do not commit)
+validate/real_test/
+
+# Python
+venv/
+__pycache__/
+webui_server.log
+*.pyc
+.ipynb_checkpoints/
+
+# Keep sample placeholders
+!samples/.gitkeep

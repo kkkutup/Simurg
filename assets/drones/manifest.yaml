@@ -1,0 +1,15 @@
+# Track every 3D asset's source + license here. This matters when you SELL the data:
+# a buyer (ASELSAN-tier integrator, university lab) will ask whether the training set
+# is license-clean. Prefer CC0 / self-built models for anything redistributed.
+#
+# Until you add models, SynthRange uses built-in primitive proxy drones (see
+# synthrange/proxy.py) and this file can stay empty.
+#
+# Example entry:
+# - file: mavic_proxy.glb
+#   class: quad_consumer
+#   source: https://example.com/model
+#   license: CC0          # CC0 | CC-BY | purchased-royalty-free | self-built
+#   notes: verified geometry, scaled to ~0.35 m span
+
+models: []
