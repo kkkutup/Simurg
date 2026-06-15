@@ -1,18 +1,21 @@
 # Generated datasets / renders
 out/
 runs/
+
+# Binary media — ignore the heavy files, keep folder structure + manifests/readmes
 *.png
 *.jpg
 *.jpeg
-*.exr
 *.hdr
-
-# Large 3D assets (keep manifest, not binaries)
-assets/drones/*.obj
-assets/drones/*.glb
-assets/drones/*.fbx
-assets/drones/*.blend
-assets/hdris/*
+*.exr
+*.obj
+*.glb
+*.gltf
+*.fbx
+*.blend
+*.blend1
+*.ply
+*.stl
 
 # Real validation imagery (do not commit)
 validate/real_test/
@@ -20,9 +23,11 @@ validate/real_test/
 # Python
 venv/
 __pycache__/
-webui_server.log
 *.pyc
 .ipynb_checkpoints/
+webui_server.log
 
-# Keep sample placeholders
-!samples/.gitkeep
+# Keep folder structure + docs even inside otherwise-ignored asset dirs
+!**/.gitkeep
+!**/README.md
+!**/manifest.yaml

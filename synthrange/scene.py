@@ -53,7 +53,9 @@ def _list_hdris(cfg: Config) -> list[str]:
         return []
     files: list[str] = []
     for ext in ("*.hdr", "*.exr"):
-        files.extend(glob(os.path.join(cfg.hdri_dir, ext)))
+        # Recursive: picks up both the top level and category subfolders
+        # (clear/, overcast/, sunset_dawn/, night/, ...).
+        files.extend(glob(os.path.join(cfg.hdri_dir, "**", ext), recursive=True))
     # Absolute paths: BlenderProc/Blender runs from its own working directory, so a
     # relative path like "assets/hdris/x.hdr" fails to load.
     return [os.path.abspath(f) for f in files]
