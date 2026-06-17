@@ -56,6 +56,11 @@ def _list_hdris(cfg: Config) -> list[str]:
         # Recursive: picks up both the top level and category subfolders
         # (clear/, overcast/, sunset_dawn/, night/, ...).
         files.extend(glob(os.path.join(cfg.hdri_dir, "**", ext), recursive=True))
+    # Optional subset: only use skies whose filename is in background.hdri_include.
+    if cfg.hdri_include:
+        keep = set(cfg.hdri_include)
+        sub = [f for f in files if os.path.basename(f) in keep]
+        files = sub or files
     # Absolute paths: BlenderProc/Blender runs from its own working directory, so a
     # relative path like "assets/hdris/x.hdr" fails to load.
     return [os.path.abspath(f) for f in files]
@@ -176,6 +181,8 @@ def load_model_library(drones_dir: str) -> dict:
     man = yaml.safe_load(open(mpath, encoding="utf-8")) or {}
     lib: dict[str, list] = {}
     for m in man.get("models") or []:
+        if not m.get("enabled", True):  # toggled off in the UI
+            continue
         cls, rel = m.get("class"), m.get("file")
         if not cls or not rel:
             continue
@@ -201,10 +208,11 @@ def build_targets(cfg: Config, rng: np.random.Generator, library: dict | None = 
     chosen class has any, else falls back to a primitive proxy. Returns MeshObjects.
     """
     library = library or {}
+    pool = cfg.included_classes()
     k = int(rng.integers(cfg.n_targets[0], cfg.n_targets[1] + 1))
     objs = []
     for _ in range(k):
-        cls = cfg.classes[int(rng.integers(0, len(cfg.classes)))]
+        cls = pool[int(rng.integers(0, len(pool)))]
         span = float(rng.uniform(*cfg.target_scale_m))
 
         templates = library.get(cls.name)
@@ -244,10 +252,11 @@ def sample_camera(cfg: Config, rng: np.random.Generator, targets: list):
         poi = np.zeros(3)
 
     dist = float(rng.uniform(*cfg.distance_m))
-    # Random viewing direction, biased so the camera tends to look slightly upward
-    # at the target (drone-in-sky composition).
+    # Viewing-direction elevation comes from the viewpoint mode (camera.elevation_deg):
+    #   ground->air = look up (positive), air->air = ~level, air->ground = look down.
     azim = float(rng.uniform(0, 2 * math.pi))
-    elev = float(rng.uniform(math.radians(-25), math.radians(35)))
+    elev = float(rng.uniform(math.radians(cfg.elevation_deg[0]),
+                             math.radians(cfg.elevation_deg[1])))
     direction = np.array([
         math.cos(elev) * math.cos(azim),
         math.cos(elev) * math.sin(azim),

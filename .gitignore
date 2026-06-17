@@ -31,3 +31,6 @@ webui_server.log
 !**/.gitkeep
 !**/README.md
 !**/manifest.yaml
+
+# Studio session-derived configs
+configs/_*.yaml

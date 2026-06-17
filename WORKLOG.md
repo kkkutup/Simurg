@@ -108,3 +108,29 @@ Built `webui/` — a local Flask control panel. Verified every endpoint + both j
   render job launched blenderproc, progressed 0->100%, produced 2 imgs/3 anns. Server then
   stopped + test artifacts cleaned. Offline suite still 7/7.
 - New dep: flask>=3.0 (in requirements.txt).
+
+## Session 4 — Scene Studio UI + detection-geometry controls
+
+Rebuilt the web UI into a real scene-design Studio and added the engine support behind it.
+
+Engine/config:
+- New config fields: scene.viewpoint, camera.elevation_deg, scene.include_classes,
+  background.hdri_include (all backward-compatible defaults).
+- scene.py: camera elevation now driven by viewpoint; build_targets honours
+  include_classes; _list_hdris honours hdri_include; load_model_library skips models
+  with enabled:false.
+
+UI (webui/):
+- **Studio tab**: viewpoint cards (ground->air / air->air / air->ground / mixed),
+  range segmented control (close/medium/long/mixed), drones-per-frame, class chips,
+  sky chips, render with live progress + preview strip.
+- **Models tab**: Objaverse fetch button, upload, per-model enable toggle + class
+  dropdown + license badge + delete (grid of cards).
+- Scenario-driven render: app derives configs/_studio.yaml from the scenario.
+- New endpoints: /api/scene-options, /api/models (enriched), /api/models/update,
+  /api/models/fetch.
+
+Verified live: scene-options + models endpoints; a ground->air close-range studio
+render produced a clear looking-up-at-the-sky frame with a big quad_consumer + small
+quad_fpv, only the selected classes, correct derived elevation [10,70] / distance [5,30].
+Offline suite still 7/7; all compiles.

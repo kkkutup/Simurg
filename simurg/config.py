@@ -41,6 +41,11 @@ class Config:
 
     classes: list[DroneClass]
 
+    viewpoint: str
+    elevation_deg: tuple[float, float]
+    include_classes: list[str]
+    hdri_include: list[str]
+
     n_targets: tuple[int, int]
     distance_m: tuple[float, float]
     target_scale_m: tuple[float, float]
@@ -69,6 +74,14 @@ class Config:
 
     def category_map(self) -> dict[int, str]:
         return {c.id: c.name for c in self.classes}
+
+    def included_classes(self) -> list[DroneClass]:
+        """Classes the renderer may place (subset selected in the UI, or all)."""
+        if not self.include_classes:
+            return self.classes
+        keep = set(self.include_classes)
+        sub = [c for c in self.classes if c.name in keep]
+        return sub or self.classes
 
     def validate(self) -> "Config":
         """Sanity-check a recipe; raise ValueError with an actionable message."""
@@ -145,6 +158,10 @@ def load_config(path: str | Path) -> Config:
         denoiser=bool(rn.get("denoiser", True)),
         fov_deg=_pair(cam.get("fov_deg"), (40, 75)),
         classes=classes,
+        viewpoint=str(sc.get("viewpoint", "mixed")),
+        elevation_deg=_pair(cam.get("elevation_deg"), (-25, 35)),
+        include_classes=list(sc.get("include_classes", []) or []),
+        hdri_include=list(bg.get("hdri_include", []) or []),
         n_targets=tuple(int(x) for x in _pair(sc.get("n_targets"), (0, 2))),
         distance_m=_pair(sc.get("distance_m"), (8, 200)),
         target_scale_m=_pair(sc.get("target_scale_m"), (0.2, 1.2)),

@@ -14,6 +14,9 @@ render:
 
 camera:
   fov_deg: [40, 75]   # horizontal field of view, randomized per frame
+  # Viewing-direction elevation (deg). Set by the Studio "viewpoint":
+  #   ground->air [10,70] look up · air->air [-20,20] level · air->ground [-70,-10] look down
+  elevation_deg: [10, 70]
 
 # Classes the generator can place. id 0 is reserved for background by convention.
 classes:
@@ -22,6 +25,8 @@ classes:
   - { name: fixedwing_fpv, id: 3, shape: fixedwing }
 
 scene:
+  viewpoint: ground_to_air   # ground_to_air | air_to_air | air_to_ground | mixed
+  include_classes: []        # subset of class names to place; [] = all
   n_targets: [0, 2]        # drones per frame; 0 => hard-negative (empty) frame
   distance_m: [8, 200]     # camera-to-target distance (controls apparent size)
   target_scale_m: [0.2, 1.2]   # physical span of the target
@@ -37,6 +42,7 @@ background:
   sky_color_top:    [0.20, 0.45, 0.85]
   sky_color_bottom: [0.75, 0.85, 0.97]
   hdri_dir: assets/hdris   # if populated, a random HDRI is used instead
+  hdri_include: []         # subset of sky filenames to use; [] = all in hdri_dir
 
 assets:
   # Optional real 3D models. If empty, primitive proxy drones are used.

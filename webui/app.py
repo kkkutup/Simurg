@@ -41,6 +41,24 @@ jm = JobManager()
 
 ALLOWED_MODEL_EXT = {".obj", ".glb", ".fbx", ".ply", ".blend"}
 
+# Studio presets — the UI picks a name, these become concrete config ranges.
+VIEWPOINTS = {
+    "ground_to_air": {"label": "Ground → Air", "elevation_deg": [10, 70],
+                      "hint": "Camera on the ground looking up at drones (C-UAS perimeter)."},
+    "air_to_air":    {"label": "Air → Air", "elevation_deg": [-20, 20],
+                      "hint": "Drone-mounted camera, roughly level (interceptor / detect-and-avoid)."},
+    "air_to_ground": {"label": "Air → Ground", "elevation_deg": [-70, -10],
+                      "hint": "Looking down from above (overwatch / surveillance)."},
+    "mixed":         {"label": "Mixed", "elevation_deg": [-30, 70],
+                      "hint": "Every angle — most robust, hardest."},
+}
+RANGES = {
+    "close":  {"label": "Close (5–30 m)", "distance_m": [5, 30]},
+    "medium": {"label": "Medium (20–120 m)", "distance_m": [20, 120]},
+    "long":   {"label": "Long (80–400 m)", "distance_m": [80, 400]},
+    "mixed":  {"label": "Mixed (8–300 m)", "distance_m": [8, 300]},
+}
+
 
 # ----------------------------------------------------------------------------- helpers
 def _read_yaml(p: Path) -> dict:
@@ -126,16 +144,71 @@ def _manifest_path() -> Path:
     return MODELS / "manifest.yaml"
 
 
+def _all_model_files() -> list[Path]:
+    out = []
+    if MODELS.exists():
+        for f in MODELS.rglob("*"):
+            if f.suffix.lower() in ALLOWED_MODEL_EXT:
+                out.append(f)
+    return out
+
+
 @app.get("/api/models")
 def api_models():
     MODELS.mkdir(parents=True, exist_ok=True)
     man = _read_yaml(_manifest_path()) if _manifest_path().exists() else {}
-    entries = man.get("models", []) or []
-    files = []
-    for f in MODELS.iterdir():
-        if f.suffix.lower() in ALLOWED_MODEL_EXT:
-            files.append({"file": f.name, "mb": round(f.stat().st_size / 1e6, 2)})
-    return jsonify({"files": files, "manifest": entries})
+    by_file = {m.get("file"): m for m in (man.get("models") or [])}
+    items = []
+    for f in _all_model_files():
+        rel = f.relative_to(MODELS).as_posix()
+        m = by_file.get(rel, {})
+        items.append({
+            "file": rel,
+            "mb": round(f.stat().st_size / 1e6, 2),
+            "class": m.get("class", ""),
+            "license": m.get("license", "?"),
+            "name": m.get("name", f.stem),
+            "enabled": bool(m.get("enabled", True)),
+        })
+    return jsonify({"models": items})
+
+
+@app.post("/api/models/update")
+def api_models_update():
+    body = request.get_json(force=True)
+    rel = body.get("file", "")
+    man = _read_yaml(_manifest_path()) if _manifest_path().exists() else {}
+    models = man.get("models") or []
+    found = False
+    for m in models:
+        if m.get("file") == rel:
+            if "enabled" in body:
+                m["enabled"] = bool(body["enabled"])
+            if body.get("class") is not None:
+                m["class"] = body["class"]
+            found = True
+            break
+    if not found:  # file on disk but not yet in manifest
+        entry = {"file": rel, "class": body.get("class", ""), "license": "unknown"}
+        if "enabled" in body:
+            entry["enabled"] = bool(body["enabled"])
+        models.append(entry)
+    man["models"] = models
+    _write_yaml(_manifest_path(), man)
+    return jsonify({"ok": True})
+
+
+@app.post("/api/models/fetch")
+def api_models_fetch():
+    body = request.get_json(force=True)
+    per = int(body.get("per_class", 3))
+    cats = str(body.get("categories", "drone,helicopter,airplane"))
+    cmd = [str(PYEXE), "tools/fetch_objaverse_drones.py",
+           "--per-class", str(per), "--categories", cats]
+    if body.get("allow_all_licenses"):
+        cmd.append("--allow-all-licenses")
+    jid = jm.start(cmd, str(ROOT), kind="fetch")
+    return jsonify({"job": jid})
 
 
 @app.post("/api/models/upload")
@@ -148,40 +221,98 @@ def api_models_upload():
     ext = Path(f.filename or "").suffix.lower()
     if ext not in ALLOWED_MODEL_EXT:
         return jsonify({"error": f"unsupported type {ext}"}), 400
-    MODELS.mkdir(parents=True, exist_ok=True)
-    dst = MODELS / Path(f.filename).name
+    fname = Path(f.filename).name
+    subdir = _safe_name(cls) if cls else ""
+    dst = (MODELS / subdir / fname) if subdir else (MODELS / fname)
+    dst.parent.mkdir(parents=True, exist_ok=True)
     f.save(dst)
-    # append to manifest
+    rel = dst.relative_to(MODELS).as_posix()
     man = _read_yaml(_manifest_path()) if _manifest_path().exists() else {}
-    models = man.get("models") or []
-    models = [m for m in models if m.get("file") != dst.name]
-    models.append({"file": dst.name, "class": cls, "license": license_})
+    models = [m for m in (man.get("models") or []) if m.get("file") != rel]
+    models.append({"file": rel, "class": cls, "license": license_, "enabled": True})
     man["models"] = models
     _write_yaml(_manifest_path(), man)
-    return jsonify({"ok": True, "file": dst.name})
+    return jsonify({"ok": True, "file": rel})
 
 
 @app.post("/api/models/delete")
 def api_models_delete():
-    name = request.get_json(force=True).get("file", "")
-    p = MODELS / Path(name).name
-    if p.exists() and p.suffix.lower() in ALLOWED_MODEL_EXT:
+    rel = request.get_json(force=True).get("file", "")
+    p = (MODELS / rel).resolve()
+    # guard against path escapes
+    if str(p).startswith(str(MODELS.resolve())) and p.exists() and p.suffix.lower() in ALLOWED_MODEL_EXT:
         p.unlink()
     man = _read_yaml(_manifest_path()) if _manifest_path().exists() else {}
-    man["models"] = [m for m in (man.get("models") or []) if m.get("file") != p.name]
+    man["models"] = [m for m in (man.get("models") or []) if m.get("file") != rel]
     _write_yaml(_manifest_path(), man)
     return jsonify({"ok": True})
+
+
+# ----------------------------------------------------------------------------- studio
+@app.get("/api/scene-options")
+def api_scene_options():
+    base = CONFIGS / "skywatch.yaml"
+    cfg = _read_yaml(base) if base.exists() else {}
+    classes = [c["name"] for c in cfg.get("classes", [])]
+    skies = [f.name for f in sorted(HDRIS.glob("**/*.hdr")) + sorted(HDRIS.glob("**/*.exr"))]
+    sc = cfg.get("scene", {})
+    bg = cfg.get("background", {})
+    return jsonify({
+        "viewpoints": [{"id": k, **v} for k, v in VIEWPOINTS.items()],
+        "ranges": [{"id": k, **v} for k, v in RANGES.items()],
+        "classes": classes,
+        "skies": skies,
+        "defaults": {
+            "viewpoint": sc.get("viewpoint", "ground_to_air"),
+            "range": "mixed",
+            "n_targets": sc.get("n_targets", [0, 2]),
+            "include_classes": sc.get("include_classes", []) or classes,
+            "hdri_include": bg.get("hdri_include", []) or skies,
+            "samples": cfg.get("render", {}).get("samples", 48),
+        },
+    })
+
+
+def _build_studio_config(scenario: dict) -> str:
+    """Write a derived config (configs/_studio.yaml) from a Studio scenario."""
+    base = CONFIGS / "skywatch.yaml"
+    cfg = _read_yaml(base) if base.exists() else {}
+    vp = scenario.get("viewpoint", "ground_to_air")
+    rng = scenario.get("range", "mixed")
+    cfg.setdefault("scene", {})
+    cfg.setdefault("camera", {})
+    cfg.setdefault("background", {})
+    cfg.setdefault("render", {})
+    cfg["scene"]["viewpoint"] = vp
+    cfg["camera"]["elevation_deg"] = VIEWPOINTS.get(vp, VIEWPOINTS["mixed"])["elevation_deg"]
+    cfg["scene"]["distance_m"] = RANGES.get(rng, RANGES["mixed"])["distance_m"]
+    if scenario.get("n_targets"):
+        cfg["scene"]["n_targets"] = scenario["n_targets"]
+    if scenario.get("include_classes") is not None:
+        cfg["scene"]["include_classes"] = scenario["include_classes"]
+    if scenario.get("hdri_include") is not None:
+        cfg["background"]["hdri_include"] = scenario["hdri_include"]
+    if scenario.get("samples"):
+        cfg["render"]["samples"] = int(scenario["samples"])
+    cfg.setdefault("dataset", {})["name"] = scenario.get("output", "studio")
+    out = CONFIGS / "_studio.yaml"
+    _write_yaml(out, cfg)
+    return "_studio"
 
 
 # ----------------------------------------------------------------------------- render
 @app.post("/api/render")
 def api_render():
     body = request.get_json(force=True)
-    cfg = _safe_name(body.get("config", "skywatch"))
     n = int(body.get("n", 100))
-    out_name = _safe_name(body.get("output", cfg + "_run"))
-    samples = body.get("samples")
     seed = body.get("seed")
+    samples = body.get("samples")
+    if body.get("studio"):  # scenario-driven render from the Studio tab
+        cfg = _build_studio_config(body["studio"])
+        out_name = _safe_name(body["studio"].get("output", "studio_run"))
+    else:                   # raw config render (advanced Config tab)
+        cfg = _safe_name(body.get("config", "skywatch"))
+        out_name = _safe_name(body.get("output", cfg + "_run"))
     out_rel = f"out/{out_name}"
     cmd = [str(BLENDERPROC), "run", "generate.py",
            "--config", f"configs/{cfg}.yaml", "--n", str(n), "--output", out_rel]

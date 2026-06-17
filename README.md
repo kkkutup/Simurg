@@ -47,11 +47,15 @@ and browse datasets with **label overlays**.
 ```
 Then open <http://127.0.0.1:5000>. Tabs:
 
-- **Render** — pick a config, set frame count, launch; watch the progress bar + live log; one-click "Preview (1 frame)".
-- **Config** — tune resolution, samples, FOV, target count/range/size, lighting; add/remove classes; Save (or Save As a new recipe).
-- **Skies (HDRI)** — one-click download CC0 skies from PolyHaven; list/delete installed skies.
-- **Drone Models** — upload `.glb/.obj/.fbx` and assign a class + license (auto-tracked in the manifest).
-- **Datasets** — every render with image/box counts; click to open a gallery with toggleable bounding-box overlays; one-click YOLO export.
+- **Studio** — design the scene visually, then render:
+  - **Viewpoint / detection geometry** — `ground → air` (C-UAS perimeter, camera looks up), `air → air` (drone-mounted, level), `air → ground` (overwatch, looks down), or `mixed`.
+  - **Range** — close / medium / long / mixed (controls apparent target size).
+  - **Drones per frame**, **which classes** to include, and **which skies** to use — all as toggles.
+  - Render with a live progress bar + log + a **preview strip** of the latest frames with labels.
+- **Models** — fetch real drones from Objaverse (one click), upload your own; per-model **enable/disable** toggle, class reassignment, license badge, delete.
+- **Skies** — download CC0 skies from PolyHaven; list/delete.
+- **Datasets** — every render with stats; gallery with toggleable box overlays; one-click YOLO export.
+- **Advanced** — raw config field editor for power users.
 
 ## Phase 0 — spike (run this first)
 
