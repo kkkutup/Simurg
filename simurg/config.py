@@ -61,6 +61,9 @@ class Config:
 
     models: list[AssetModel]
 
+    analog_enabled: bool
+    analog_strength: tuple[float, float]
+
     out_coco: bool
     out_yolo: bool
     out_depth: bool
@@ -143,6 +146,8 @@ def load_config(path: str | Path) -> Config:
     bg = data.get("background", {})
     asset = data.get("assets", {})
     out = data.get("outputs", {})
+    fx = data.get("effects", {})
+    analog = fx.get("analog", {}) or {}
 
     classes = [DroneClass(**c) for c in data.get("classes", [])]
     models = [AssetModel(path=m["path"], cls=m["class"]) for m in asset.get("models", []) or []]
@@ -173,6 +178,8 @@ def load_config(path: str | Path) -> Config:
         sky_color_bottom=tuple(bg.get("sky_color_bottom", (0.75, 0.85, 0.97))),
         hdri_dir=str(bg.get("hdri_dir", "assets/hdris")),
         models=models,
+        analog_enabled=bool(analog.get("enabled", False)),
+        analog_strength=_pair(analog.get("strength"), (0.4, 1.0)),
         out_coco=bool(out.get("coco", True)),
         out_yolo=bool(out.get("yolo", False)),
         out_depth=bool(out.get("depth", False)),

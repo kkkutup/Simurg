@@ -203,54 +203,14 @@ def load_model_library(drones_dir: str) -> dict:
     return lib
 
 
-def build_targets(cfg: Config, rng: np.random.Generator, library: dict | None = None) -> list:
-    """Create 0..k drones near the origin. Uses real models from `library` when the
-    chosen class has any, else falls back to a primitive proxy. Returns MeshObjects.
-    """
-    library = library or {}
-    pool = cfg.included_classes()
-    k = int(rng.integers(cfg.n_targets[0], cfg.n_targets[1] + 1))
-    objs = []
-    for _ in range(k):
-        cls = pool[int(rng.integers(0, len(pool)))]
-        span = float(rng.uniform(*cfg.target_scale_m))
-
-        templates = library.get(cls.name)
-        if templates:
-            tmpl = templates[int(rng.integers(0, len(templates)))]
-            obj = tmpl.duplicate()
-            obj.hide(False)
-            obj.set_scale([span, span, span])
-            obj.set_cp("category_id", cls.id)
-            obj.set_name(cls.name)
-        else:
-            obj = proxy.make_proxy(cls.shape, cls.id, cls.name, span=span)
-
-        jit = cfg.target_jitter_m
-        obj.set_location(list(rng.uniform(-jit, jit, size=3) * np.array([1, 1, 0.5])))
-        # moderate attitude: full yaw, limited pitch/roll (drones aren't usually inverted)
-        obj.set_rotation_euler([
-            float(rng.uniform(-0.5, 0.5)),
-            float(rng.uniform(-0.5, 0.5)),
-            float(rng.uniform(-np.pi, np.pi)),
-        ])
-        objs.append(obj)
-    return objs
-
-
-def sample_camera(cfg: Config, rng: np.random.Generator, targets: list):
-    """Place the camera at a random distance looking at the target cluster.
-
-    With no targets, look at the origin (produces a clean sky / hard-negative frame).
+def sample_camera(cfg: Config, rng: np.random.Generator) -> dict:
+    """Place the camera looking at the origin; return a 'view' (basis + geometry) that
+    build_targets uses to scatter drones across the frame without overlap.
     """
     fov = math.radians(float(rng.uniform(*cfg.fov_deg)))
     bproc.camera.set_intrinsics_from_blender_params(lens=fov, lens_unit="FOV")
 
-    if targets:
-        poi = np.mean([t.get_location() for t in targets], axis=0)
-    else:
-        poi = np.zeros(3)
-
+    poi = np.zeros(3)
     dist = float(rng.uniform(*cfg.distance_m))
     # Viewing-direction elevation comes from the viewpoint mode (camera.elevation_deg):
     #   ground->air = look up (positive), air->air = ~level, air->ground = look down.
@@ -267,7 +227,72 @@ def sample_camera(cfg: Config, rng: np.random.Generator, targets: list):
     rot = bproc.camera.rotation_from_forward_vec(poi - cam_location)
     cam2world = bproc.math.build_transformation_mat(cam_location, rot)
     bproc.camera.add_camera_pose(cam2world)
-    return cam2world
+
+    R = np.array(cam2world)[:3, :3]
+    return {
+        "poi": poi, "dist": dist, "fov": fov,
+        "right": R[:, 0], "up": R[:, 1], "forward": direction,
+    }
+
+
+def build_targets(cfg: Config, rng: np.random.Generator, library: dict | None,
+                  view: dict) -> list:
+    """Create 0..k drones spread across the camera frame with no overlap.
+
+    Targets are positioned in the camera's image plane (right/up basis) and rejection-
+    sampled so their projected footprints stay separated — no more stacked boxes. Uses
+    real models from `library` when available, else a primitive proxy.
+    """
+    library = library or {}
+    pool = cfg.included_classes()
+    k = int(rng.integers(cfg.n_targets[0], cfg.n_targets[1] + 1))
+
+    right, up, fwd, poi = view["right"], view["up"], view["forward"], view["poi"]
+    d = view["dist"]
+    aspect = cfg.height / max(1, cfg.width)
+    half_w = d * math.tan(view["fov"] / 2.0) * 0.82   # keep targets ~within frame
+    half_h = half_w * aspect
+
+    objs, placed = [], []  # placed: (u, v, radius) in image-plane metres at depth d
+    for _ in range(k):
+        cls = pool[int(rng.integers(0, len(pool)))]
+        span = float(rng.uniform(*cfg.target_scale_m))
+        r = span * 0.55  # footprint radius (image-plane metres)
+
+        uv = None
+        for _try in range(40):
+            u = float(rng.uniform(-half_w + r, half_w - r))
+            v = float(rng.uniform(-half_h + r, half_h - r))
+            if all(math.hypot(u - pu, v - pv) > (r + pr) * 1.5 for pu, pv, pr in placed):
+                uv = (u, v)
+                break
+        if uv is None:
+            continue  # couldn't place without overlap -> fewer targets this frame
+        u, v = uv
+        placed.append((u, v, r))
+
+        templates = library.get(cls.name)
+        if templates:
+            tmpl = templates[int(rng.integers(0, len(templates)))]
+            obj = tmpl.duplicate()
+            obj.hide(False)
+            obj.set_scale([span, span, span])
+            obj.set_cp("category_id", cls.id)
+            obj.set_name(cls.name)
+        else:
+            obj = proxy.make_proxy(cls.shape, cls.id, cls.name, span=span)
+
+        depth_off = float(rng.uniform(-0.12 * d, 0.12 * d))  # vary range a little
+        pos = poi + right * u + up * v + fwd * depth_off
+        obj.set_location([float(pos[0]), float(pos[1]), float(pos[2])])
+        # moderate attitude: full yaw, limited pitch/roll (drones aren't usually inverted)
+        obj.set_rotation_euler([
+            float(rng.uniform(-0.5, 0.5)),
+            float(rng.uniform(-0.5, 0.5)),
+            float(rng.uniform(-np.pi, np.pi)),
+        ])
+        objs.append(obj)
+    return objs
 
 
 def cleanup(objs: list) -> None:

@@ -51,6 +51,8 @@ Then open <http://127.0.0.1:5000>. Tabs:
   - **Viewpoint / detection geometry** — `ground → air` (C-UAS perimeter, camera looks up), `air → air` (drone-mounted, level), `air → ground` (overwatch, looks down), or `mixed`.
   - **Range** — close / medium / long / mixed (controls apparent target size).
   - **Drones per frame**, **which classes** to include, and **which skies** to use — all as toggles.
+  - **Analog video-feed look** toggle — scanlines, chroma shift, noise, vignette (matches real FPV / analog C-UAS feeds; also strong augmentation).
+  - Targets are auto-spread across the frame (no overlapping boxes).
   - Render with a live progress bar + log + a **preview strip** of the latest frames with labels.
 - **Models** — fetch real drones from Objaverse (one click), upload your own; per-model **enable/disable** toggle, class reassignment, license badge, delete.
 - **Skies** — download CC0 skies from PolyHaven; list/delete.

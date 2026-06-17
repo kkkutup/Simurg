@@ -27,7 +27,7 @@ async function loadStudio() {
   STUDIO.classes = new Set(d.include_classes);
   STUDIO.allSkies = o.skies; STUDIO.skies = new Set(d.hdri_include);
   $("#tg-min").value = d.n_targets[0]; $("#tg-max").value = d.n_targets[1];
-  $("#st-samples").placeholder = d.samples;
+  $("#st-samples").placeholder = d.samples; $("#st-analog").checked = !!d.analog;
 
   // viewpoint cards
   $("#vp-grid").innerHTML = o.viewpoints.map(v =>
@@ -85,6 +85,7 @@ function scenario(extra = {}) {
     include_classes: [...STUDIO.classes],
     hdri_include: STUDIO.skies.size === STUDIO.allSkies.length ? [] : [...STUDIO.skies],
     samples: $("#st-samples").value || null,
+    analog: $("#st-analog").checked,
     output: ($("#st-out").value || "studio_run"),
     ...extra,
   };

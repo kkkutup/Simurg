@@ -49,6 +49,11 @@ assets:
   # Each entry: { path: assets/drones/mavic.glb, class: quad_consumer }
   models: []
 
+effects:
+  analog:                 # analog video-feed look (scanlines, chroma shift, noise…)
+    enabled: false
+    strength: [0.4, 1.0]  # randomized per frame for domain variety
+
 outputs:
   coco: true
   yolo: false   # run the standalone exporter, or set true to emit alongside

@@ -134,3 +134,19 @@ Verified live: scene-options + models endpoints; a ground->air close-range studi
 render produced a clear looking-up-at-the-sky frame with a big quad_consumer + small
 quad_fpv, only the selected classes, correct derived elevation [10,70] / distance [5,30].
 Offline suite still 7/7; all compiles.
+
+## Session 5 — non-overlapping placement + analog video shader
+
+Two fixes the user flagged:
+1. **Overlapping boxes** — targets used to cluster near the origin and stack. Now the
+   camera is sampled first and build_targets places each drone in the camera's image
+   plane (right/up basis), rejection-sampled for separation. Verified: 3 targets/frame
+   at close range -> max pairwise box IoU 0.000.
+2. **Analog video look** — new simurg/analog.py post-processes each rendered frame
+   (desaturation + colour cast, chromatic aberration, horizontal smear, scanlines,
+   noise, occasional tear, vignette, gamma). Strength randomized per frame = domain
+   randomization for real FPV/analog C-UAS feeds. Labels unaffected (geometry untouched).
+   Config: effects.analog.{enabled,strength}; Studio has an "Analog video-feed look"
+   toggle. Verified on day + night frames.
+
+Offline suite 7/7; all compiles.

@@ -269,6 +269,7 @@ def api_scene_options():
             "include_classes": sc.get("include_classes", []) or classes,
             "hdri_include": bg.get("hdri_include", []) or skies,
             "samples": cfg.get("render", {}).get("samples", 48),
+            "analog": bool(cfg.get("effects", {}).get("analog", {}).get("enabled", False)),
         },
     })
 
@@ -294,6 +295,7 @@ def _build_studio_config(scenario: dict) -> str:
         cfg["background"]["hdri_include"] = scenario["hdri_include"]
     if scenario.get("samples"):
         cfg["render"]["samples"] = int(scenario["samples"])
+    cfg.setdefault("effects", {}).setdefault("analog", {})["enabled"] = bool(scenario.get("analog", False))
     cfg.setdefault("dataset", {})["name"] = scenario.get("output", "studio")
     out = CONFIGS / "_studio.yaml"
     _write_yaml(out, cfg)

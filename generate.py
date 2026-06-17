@@ -20,6 +20,7 @@ from simurg import __version__
 from simurg.config import load_config
 from simurg import scene as scn
 from simurg.card import write_card
+from simurg import analog
 
 
 def parse_args() -> argparse.Namespace:
@@ -80,7 +81,11 @@ def main() -> None:
     for i in range(n):
         bproc.utility.reset_keyframes()
 
-        targets = scn.build_targets(cfg, rng, library)
+        light = scn.set_lighting(cfg, rng)
+        scn.set_background(cfg, rng, hdris)
+        # Camera first, then scatter targets across the frame with no overlap.
+        view = scn.sample_camera(cfg, rng)
+        targets = scn.build_targets(cfg, rng, library, view)
         if not targets:
             empty_frames += 1
         else:
@@ -89,13 +94,16 @@ def main() -> None:
                 name = next((c.name for c in cfg.classes if c.id == cid), str(cid))
                 per_class[name] = per_class.get(name, 0) + 1
 
-        light = scn.set_lighting(cfg, rng)
-        scn.set_background(cfg, rng, hdris)
-        scn.sample_camera(cfg, rng, targets)
-
         # Segmentation must be enabled AFTER this frame's objects exist (see scene.py).
         scn.enable_segmentation()
         data = bproc.renderer.render()
+
+        # Optional analog-video look (domain randomization); labels are unaffected.
+        if cfg.analog_enabled:
+            data["colors"] = [
+                analog.apply_analog(c, rng, float(rng.uniform(*cfg.analog_strength)))
+                for c in data["colors"]
+            ]
 
         bproc.writer.write_coco_annotations(
             coco_dir,
