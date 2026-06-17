@@ -43,6 +43,7 @@ background:
   sky_color_bottom: [0.75, 0.85, 0.97]
   hdri_dir: assets/hdris   # if populated, a random HDRI is used instead
   hdri_include: []         # subset of sky filenames to use; [] = all in hdri_dir
+  sky_only: false          # true = only HDRIs tagged sky_only in hdris/manifest.yaml (air->air)
 
 assets:
   # Optional real 3D models. If empty, primitive proxy drones are used.

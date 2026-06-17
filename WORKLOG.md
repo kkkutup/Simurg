@@ -150,3 +150,21 @@ Two fixes the user flagged:
    toggle. Verified on day + night frames.
 
 Offline suite 7/7; all compiles.
+
+## Session 6 — categorized HDRIs (sky-only vs environment)
+
+Problem: air->air shots were sometimes rendered against terrain/horizon HDRIs (a drone
+in flight should be against sky). Fix: categorize skies and pick per viewpoint.
+
+- fetch_hdris.py rebuilt: classifies each PolyHaven HDRI from its categories/tags into
+  sky_only (clean sky) vs environment; writes assets/hdris/manifest.yaml. New flags:
+  --sky-only (fetch clean-sky only), --retag (tag existing files, no download).
+  Retagged the 8 existing + fetched 8 puresky -> 15 skies, 8 sky_only.
+- Engine: background.sky_only filters _list_hdris via the manifest.
+- Studio: each viewpoint has a sky_only default (air->air = True); picking air->air
+  auto-selects only sky-tagged HDRIs; chips show a "sky" badge; Skies tab fetch has a
+  "clean-sky only" toggle. Verified: air->air render uses pure-sky backgrounds only.
+
+Models are already categorized by class (per-class folders + manifest class field).
+Offline suite 7/7; all compiles. hdris/manifest.yaml is committed (tags travel with the
+repo); the .hdr binaries stay git-ignored and are re-fetched.

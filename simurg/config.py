@@ -58,6 +58,7 @@ class Config:
     sky_color_top: tuple[float, float, float]
     sky_color_bottom: tuple[float, float, float]
     hdri_dir: str
+    sky_only: bool
 
     models: list[AssetModel]
 
@@ -177,6 +178,7 @@ def load_config(path: str | Path) -> Config:
         sky_color_top=tuple(bg.get("sky_color_top", (0.2, 0.45, 0.85))),
         sky_color_bottom=tuple(bg.get("sky_color_bottom", (0.75, 0.85, 0.97))),
         hdri_dir=str(bg.get("hdri_dir", "assets/hdris")),
+        sky_only=bool(bg.get("sky_only", False)),
         models=models,
         analog_enabled=bool(analog.get("enabled", False)),
         analog_strength=_pair(analog.get("strength"), (0.4, 1.0)),

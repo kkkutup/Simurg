@@ -126,13 +126,16 @@ Record the **mAP@0.5 on real** — that number, however low at first, is the bas
 
 ## Add real assets (optional, improves realism)
 
-- **HDRI skies** — fetch CC0 skies from PolyHaven automatically (no API key):
+- **HDRI skies** — fetch CC0 skies from PolyHaven automatically (no API key). Each sky is
+  **categorized** from PolyHaven's tags into `sky_only` (clean sky, no ground) vs
+  environment, recorded in `assets/hdris/manifest.yaml`:
   ```powershell
-  .\venv\Scripts\python.exe tools\fetch_hdris.py --n 8 --res 2k
+  .\venv\Scripts\python.exe tools\fetch_hdris.py --n 8 --sky-only   # clean sky (air->air)
+  .\venv\Scripts\python.exe tools\fetch_hdris.py --n 8              # skies category (mixed)
+  .\venv\Scripts\python.exe tools\fetch_hdris.py --retag            # (re)tag existing files
   ```
-  They land in `assets/hdris/`; when that folder is non-empty the renderer uses a random
-  real sky per frame instead of the flat-colour sky. (Delete any night/dawn skies you don't
-  want if you're training a daytime-only detector.)
+  The Studio uses this: **air→air automatically restricts to sky-only backgrounds** (a drone
+  in flight should be against sky, not terrain), while ground→air / mixed can use any.
 - **Drone models** — fetch real 3D drones from **Objaverse** (no API key), filtered to
   commercially-usable licenses and sorted into the per-class folders:
   ```powershell

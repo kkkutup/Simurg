@@ -25,7 +25,9 @@ async function loadStudio() {
   const d = o.defaults;
   STUDIO.viewpoint = d.viewpoint; STUDIO.range = d.range || "mixed";
   STUDIO.classes = new Set(d.include_classes);
-  STUDIO.allSkies = o.skies; STUDIO.skies = new Set(d.hdri_include);
+  STUDIO.viewpoints = o.viewpoints;
+  STUDIO.allSkies = o.skies;                 // [{name, sky_only}]
+  STUDIO.skies = new Set(d.hdri_include);
   $("#tg-min").value = d.n_targets[0]; $("#tg-max").value = d.n_targets[1];
   $("#st-samples").placeholder = d.samples; $("#st-analog").checked = !!d.analog;
 
@@ -34,11 +36,7 @@ async function loadStudio() {
     `<div class="vp ${v.id === STUDIO.viewpoint ? "sel" : ""}" data-id="${v.id}">
        <div class="ico">${VP_ICON[v.id] || "•"}</div>
        <div><div class="t">${v.label}</div><div class="s">${v.elevation_deg[0]}° … ${v.elevation_deg[1]}°</div></div></div>`).join("");
-  $$("#vp-grid .vp").forEach(el => el.onclick = () => {
-    STUDIO.viewpoint = el.dataset.id;
-    $$("#vp-grid .vp").forEach(x => x.classList.toggle("sel", x === el));
-    $("#vp-hint").textContent = o.viewpoints.find(v => v.id === el.dataset.id).hint;
-  });
+  $$("#vp-grid .vp").forEach(el => el.onclick = () => selectViewpoint(el.dataset.id));
   $("#vp-hint").textContent = o.viewpoints.find(v => v.id === STUDIO.viewpoint).hint;
 
   // range segmented
@@ -59,9 +57,22 @@ async function loadStudio() {
   // sky chips
   renderSkyChips(); updateCounts();
 }
+function selectViewpoint(id) {
+  STUDIO.viewpoint = id;
+  $$("#vp-grid .vp").forEach(x => x.classList.toggle("sel", x.dataset.id === id));
+  const vp = (STUDIO.viewpoints || []).find(v => v.id === id) || {};
+  $("#vp-hint").textContent = vp.hint || "";
+  if (vp.sky_only) {
+    STUDIO.skies = new Set(STUDIO.allSkies.filter(s => s.sky_only).map(s => s.name));
+    toast("Air→air: clean-sky backgrounds only");
+  } else {
+    STUDIO.skies = new Set(STUDIO.allSkies.map(s => s.name));
+  }
+  renderSkyChips(); updateCounts();
+}
 function renderSkyChips() {
   $("#sky-chips").innerHTML = STUDIO.allSkies.map(s =>
-    `<div class="chip ${STUDIO.skies.has(s) ? "sel" : ""}" data-s="${s}" title="${s}">${s.replace(/_\dk\.hdr$/, "").slice(0, 22)}</div>`).join("")
+    `<div class="chip ${STUDIO.skies.has(s.name) ? "sel" : ""}" data-s="${s.name}" title="${s.name}">${s.name.replace(/_\dk\.(hdr|exr)$/, "").slice(0, 18)}${s.sky_only ? ' <span class="skytag">sky</span>' : ""}</div>`).join("")
     || `<span class="muted small">No skies — add some in the Skies tab.</span>`;
   $$("#sky-chips .chip").forEach(ch => ch.onclick = () => {
     const s = ch.dataset.s; STUDIO.skies.has(s) ? STUDIO.skies.delete(s) : STUDIO.skies.add(s);
@@ -74,13 +85,14 @@ function updateCounts() {
 }
 $("#sky-all").onclick = () => {
   if (STUDIO.skies.size === STUDIO.allSkies.length) STUDIO.skies.clear();
-  else STUDIO.skies = new Set(STUDIO.allSkies);
+  else STUDIO.skies = new Set(STUDIO.allSkies.map(s => s.name));
   renderSkyChips(); updateCounts();
 };
 
 function scenario(extra = {}) {
+  const vp = (STUDIO.viewpoints || []).find(v => v.id === STUDIO.viewpoint) || {};
   return {
-    viewpoint: STUDIO.viewpoint, range: STUDIO.range,
+    viewpoint: STUDIO.viewpoint, range: STUDIO.range, sky_only: !!vp.sky_only,
     n_targets: [+$("#tg-min").value, +$("#tg-max").value],
     include_classes: [...STUDIO.classes],
     hdri_include: STUDIO.skies.size === STUDIO.allSkies.length ? [] : [...STUDIO.skies],
@@ -144,11 +156,11 @@ async function loadSkies() {
   const list = await j("/api/hdris");
   $("#h-count").textContent = list.length;
   $("#h-list").innerHTML = list.length ? list.map(h =>
-    `<div class="chip">☁ ${h.name.replace(/_\dk\.hdr$/, "")} <span class="sz">${h.mb}MB</span> <span class="x" data-n="${h.name}">✕</span></div>`).join("")
+    `<div class="chip">☁ ${h.name.replace(/_\dk\.hdr$/, "").slice(0, 26)}${h.sky_only ? ' <span class="skytag">sky</span>' : ""} <span class="sz">${h.mb}MB</span> <span class="x" data-n="${h.name}">✕</span></div>`).join("")
     : `<span class="muted small">No skies yet.</span>`;
   $$("#h-list .x").forEach(x => x.onclick = () => postJSON("/api/hdris/delete", { name: x.dataset.n }).then(() => { toast("Deleted"); loadSkies(); }));
 }
-$("#h-fetch").onclick = async () => { await postJSON("/api/hdris/fetch", { n: +$("#h-n").value, res: $("#h-res").value }); toast("Downloading skies…"); };
+$("#h-fetch").onclick = async () => { await postJSON("/api/hdris/fetch", { n: +$("#h-n").value, res: $("#h-res").value, sky_only: $("#h-skyonly").checked }); toast("Downloading skies…"); };
 
 // ================= DATASETS =================
 async function loadDatasets() {

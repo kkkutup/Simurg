@@ -56,6 +56,15 @@ def _list_hdris(cfg: Config) -> list[str]:
         # Recursive: picks up both the top level and category subfolders
         # (clear/, overcast/, sunset_dawn/, night/, ...).
         files.extend(glob(os.path.join(cfg.hdri_dir, "**", ext), recursive=True))
+    # Sky-only filter (e.g. air->air): keep only HDRIs tagged sky_only in the manifest.
+    if cfg.sky_only:
+        man_path = os.path.join(cfg.hdri_dir, "manifest.yaml")
+        if os.path.isfile(man_path):
+            import yaml
+            man = yaml.safe_load(open(man_path, encoding="utf-8")) or {}
+            skyset = {s.get("file") for s in man.get("skies", []) if s.get("sky_only")}
+            sub = [f for f in files if os.path.basename(f) in skyset]
+            files = sub or files  # if none tagged, don't strand the render
     # Optional subset: only use skies whose filename is in background.hdri_include.
     if cfg.hdri_include:
         keep = set(cfg.hdri_include)

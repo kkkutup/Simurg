@@ -80,6 +80,7 @@ a.link{color:var(--accent);cursor:pointer;font-size:12px}
 .chip.sel{border-color:var(--accent);background:rgba(79,140,255,.12);color:var(--ink)}
 .chip.sel::before{content:"✓ ";color:var(--good);font-weight:800}
 .chip .x{color:var(--danger);cursor:pointer;font-weight:800}.chip .sz{color:var(--muted)}
+.skytag{font-size:9px;font-weight:800;background:rgba(54,201,139,.2);color:var(--good);padding:1px 5px;border-radius:10px;margin-left:4px}
 
 .status{margin:10px 0 6px;font-size:13px}
 .progress{height:9px;background:var(--panel2);border-radius:6px;overflow:hidden;margin:6px 0}

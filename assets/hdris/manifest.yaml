@@ -1,0 +1,229 @@
+skies:
+- file: kloppenheim_02_2k.hdr
+  slug: kloppenheim_02
+  sky_only: false
+  tags:
+  - clear
+  - dark
+  - galaxy
+  - high contrast
+  - moon
+  - natural light
+  - nature
+  - night
+  - outdoor
+  - skies
+  - stars
+  name: Kloppenheim 02
+- file: lilienstein_2k.hdr
+  slug: lilienstein
+  sky_only: false
+  tags:
+  - field
+  - forest
+  - grass
+  - meadow
+  - medium contrast
+  - natural light
+  - nature
+  - outdoor
+  - partly cloudy
+  - skies
+  - sun
+  - sunrise-sunset
+  name: Lilienstein
+- file: moonless_golf_2k.hdr
+  slug: moonless_golf
+  sky_only: false
+  tags:
+  - artificial light
+  - clear
+  - field
+  - golf
+  - grass
+  - medium contrast
+  - milky way
+  - natural light
+  - nature
+  - night
+  - outdoor
+  - skies
+  - stars
+  name: Moonless Golf
+- file: satara_night_2k.hdr
+  slug: satara_night
+  sky_only: false
+  tags:
+  - artificial light
+  - clear
+  - galaxy
+  - high contrast
+  - hut
+  - lamp
+  - milky way
+  - nature
+  - night
+  - outdoor
+  - skies
+  - stars
+  - tree
+  name: Satara Night
+- file: satara_night_no_lamps_2k.hdr
+  slug: satara_night_no_lamps
+  sky_only: false
+  tags:
+  - clear
+  - galaxy
+  - low contrast
+  - milky way
+  - natural light
+  - nature
+  - night
+  - outdoor
+  - skies
+  - stars
+  - tree
+  name: Satara Night (No Lamps)
+- file: spruit_sunrise_2k.hdr
+  slug: spruit_sunrise
+  sky_only: false
+  tags:
+  - clear
+  - field
+  - grass
+  - high contrast
+  - mist
+  - natural light
+  - nature
+  - outdoor
+  - park
+  - path
+  - power line
+  - skies
+  - sun
+  - sunrise-sunset
+  - tree
+  name: Spruit Sunrise
+- file: the_sky_is_on_fire_2k.hdr
+  slug: the_sky_is_on_fire
+  sky_only: false
+  tags:
+  - backplates
+  - medium contrast
+  - natural light
+  - ocean
+  - outdoor
+  - partly cloudy
+  - path
+  - promenade
+  - rail
+  - skies
+  - sunrise-sunset
+  - twilight
+  - urban
+  - wave
+  name: The Sky Is On Fire
+- file: kloofendal_48d_partly_cloudy_puresky_2k.hdr
+  slug: kloofendal_48d_partly_cloudy_puresky
+  sky_only: true
+  tags:
+  - high contrast
+  - midday
+  - natural light
+  - nature
+  - outdoor
+  - partly cloudy
+  - pure skies
+  - skies
+  name: Kloofendal 48d Partly Cloudy (Pure Sky)
+- file: kloppenheim_06_puresky_2k.hdr
+  slug: kloppenheim_06_puresky
+  sky_only: true
+  tags:
+  - low contrast
+  - natural light
+  - nature
+  - outdoor
+  - partly cloudy
+  - pure skies
+  - skies
+  - sunrise-sunset
+  name: Kloppenheim 06 (Pure Sky)
+- file: belfast_sunset_puresky_2k.hdr
+  slug: belfast_sunset_puresky
+  sky_only: true
+  tags:
+  - low contrast
+  - natural light
+  - nature
+  - outdoor
+  - partly cloudy
+  - pure skies
+  - skies
+  - sunrise-sunset
+  name: Belfast Sunset (Pure Sky)
+- file: autumn_field_puresky_2k.hdr
+  slug: autumn_field_puresky
+  sky_only: true
+  tags:
+  - clear
+  - high contrast
+  - morning-afternoon
+  - natural light
+  - nature
+  - outdoor
+  - pure skies
+  - skies
+  name: Autumn Field (Pure Sky)
+- file: overcast_soil_puresky_2k.hdr
+  slug: overcast_soil_puresky
+  sky_only: true
+  tags:
+  - low contrast
+  - morning-afternoon
+  - natural light
+  - nature
+  - outdoor
+  - overcast
+  - pure skies
+  - skies
+  name: Overcast Soil (Pure Sky)
+- file: sunflowers_puresky_2k.hdr
+  slug: sunflowers_puresky
+  sky_only: true
+  tags:
+  - high contrast
+  - midday
+  - natural light
+  - nature
+  - outdoor
+  - partly cloudy
+  - pure skies
+  - skies
+  name: Sunflowers (Pure Sky)
+- file: industrial_sunset_puresky_2k.hdr
+  slug: industrial_sunset_puresky
+  sky_only: true
+  tags:
+  - low contrast
+  - natural light
+  - nature
+  - outdoor
+  - partly cloudy
+  - pure skies
+  - skies
+  - sunrise-sunset
+  name: Industrial Sunset (Pure Sky)
+- file: citrus_orchard_road_puresky_2k.hdr
+  slug: citrus_orchard_road_puresky
+  sky_only: true
+  tags:
+  - low contrast
+  - natural light
+  - nature
+  - outdoor
+  - partly cloudy
+  - pure skies
+  - skies
+  - sunrise-sunset
+  name: Citrus Orchard Road (Pure Sky)

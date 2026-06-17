@@ -43,13 +43,13 @@ ALLOWED_MODEL_EXT = {".obj", ".glb", ".fbx", ".ply", ".blend"}
 
 # Studio presets — the UI picks a name, these become concrete config ranges.
 VIEWPOINTS = {
-    "ground_to_air": {"label": "Ground → Air", "elevation_deg": [10, 70],
+    "ground_to_air": {"label": "Ground → Air", "elevation_deg": [10, 70], "sky_only": False,
                       "hint": "Camera on the ground looking up at drones (C-UAS perimeter)."},
-    "air_to_air":    {"label": "Air → Air", "elevation_deg": [-20, 20],
-                      "hint": "Drone-mounted camera, roughly level (interceptor / detect-and-avoid)."},
-    "air_to_ground": {"label": "Air → Ground", "elevation_deg": [-70, -10],
+    "air_to_air":    {"label": "Air → Air", "elevation_deg": [-20, 20], "sky_only": True,
+                      "hint": "Drone-mounted camera, roughly level — clean-sky backgrounds only."},
+    "air_to_ground": {"label": "Air → Ground", "elevation_deg": [-70, -10], "sky_only": False,
                       "hint": "Looking down from above (overwatch / surveillance)."},
-    "mixed":         {"label": "Mixed", "elevation_deg": [-30, 70],
+    "mixed":         {"label": "Mixed", "elevation_deg": [-30, 70], "sky_only": False,
                       "hint": "Every angle — most robust, hardest."},
 }
 RANGES = {
@@ -114,9 +114,11 @@ def api_config_delete(name):
 @app.get("/api/hdris")
 def api_hdris():
     HDRIS.mkdir(parents=True, exist_ok=True)
+    meta = _sky_meta()
     items = []
-    for f in sorted(HDRIS.glob("*.hdr")) + sorted(HDRIS.glob("*.exr")):
-        items.append({"name": f.name, "mb": round(f.stat().st_size / 1e6, 1)})
+    for f in sorted(HDRIS.glob("**/*.hdr")) + sorted(HDRIS.glob("**/*.exr")):
+        items.append({"name": f.name, "mb": round(f.stat().st_size / 1e6, 1),
+                      "sky_only": bool(meta.get(f.name, {}).get("sky_only", False))})
     return jsonify(items)
 
 
@@ -126,6 +128,8 @@ def api_hdris_fetch():
     n = int(body.get("n", 6))
     res = str(body.get("res", "2k"))
     cmd = [str(PYEXE), "tools/fetch_hdris.py", "--n", str(n), "--res", res]
+    if body.get("sky_only"):
+        cmd.append("--sky-only")
     jid = jm.start(cmd, str(ROOT), kind="fetch")
     return jsonify({"job": jid})
 
@@ -249,12 +253,20 @@ def api_models_delete():
 
 
 # ----------------------------------------------------------------------------- studio
+def _sky_meta() -> dict:
+    mp = HDRIS / "manifest.yaml"
+    man = _read_yaml(mp) if mp.exists() else {}
+    return {s.get("file"): s for s in (man.get("skies", []) or [])}
+
+
 @app.get("/api/scene-options")
 def api_scene_options():
     base = CONFIGS / "skywatch.yaml"
     cfg = _read_yaml(base) if base.exists() else {}
     classes = [c["name"] for c in cfg.get("classes", [])]
-    skies = [f.name for f in sorted(HDRIS.glob("**/*.hdr")) + sorted(HDRIS.glob("**/*.exr"))]
+    meta = _sky_meta()
+    skies = [{"name": f.name, "sky_only": bool(meta.get(f.name, {}).get("sky_only", False))}
+             for f in sorted(HDRIS.glob("**/*.hdr")) + sorted(HDRIS.glob("**/*.exr"))]
     sc = cfg.get("scene", {})
     bg = cfg.get("background", {})
     return jsonify({
@@ -267,7 +279,7 @@ def api_scene_options():
             "range": "mixed",
             "n_targets": sc.get("n_targets", [0, 2]),
             "include_classes": sc.get("include_classes", []) or classes,
-            "hdri_include": bg.get("hdri_include", []) or skies,
+            "hdri_include": bg.get("hdri_include", []) or [s["name"] for s in skies],
             "samples": cfg.get("render", {}).get("samples", 48),
             "analog": bool(cfg.get("effects", {}).get("analog", {}).get("enabled", False)),
         },
@@ -296,6 +308,9 @@ def _build_studio_config(scenario: dict) -> str:
     if scenario.get("samples"):
         cfg["render"]["samples"] = int(scenario["samples"])
     cfg.setdefault("effects", {}).setdefault("analog", {})["enabled"] = bool(scenario.get("analog", False))
+    # Sky-only backgrounds: explicit scenario flag, else the viewpoint default (air->air = True).
+    default_sky = VIEWPOINTS.get(vp, {}).get("sky_only", False)
+    cfg["background"]["sky_only"] = bool(scenario.get("sky_only", default_sky))
     cfg.setdefault("dataset", {})["name"] = scenario.get("output", "studio")
     out = CONFIGS / "_studio.yaml"
     _write_yaml(out, cfg)
